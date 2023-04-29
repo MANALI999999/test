@@ -170,6 +170,22 @@ corrplot(cor_work_data, method = "circle", addCoef.col = "black",
          title = "Kendall Correlation matrix changed",number.cex = 0.5,
          mar=c(0,0,1,0))
 
+#Pearson_correlation - plotiing it as kendall is taking a lot of time for proccesing
+
+cor_work_data_Pearson = cor(work_df,method = 'pearson')
+
+#plotting heat map
+uppertri_mean_Pearson = cor_work_data_Pearson
+uppertri_mean_Pearson[lower.tri(cor_work_data_Pearson)] =NA 
+uppertri_melted = melt(uppertri_mean_Pearson, na.rm = TRUE)
+
+# corrplot(cor_work_data,method = "number")
+
+corrplot(cor_work_data_Pearson, method = "circle", addCoef.col = "black", 
+         type = "lower",  diag = FALSE ,tl.col ="black" ,tl.cex = 0.7,
+         title = "Pearson Correlation matrix changed",number.cex = 0.5,
+         mar=c(0,0,1,0))
+
 
 # At this point , outliers Data processing and wrangling is done and 
 # Correlation is plotted
