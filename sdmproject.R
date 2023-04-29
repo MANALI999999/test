@@ -175,34 +175,4 @@ corrplot(cor_work_data, method = "circle", addCoef.col = "black",
 # Correlation is plotted
 
 # Assumption : more the participation , more the learning , more the grade
-
-names(new_df)
-
-#Multiple Linear Regression
-set.seed(610)
-# work_df = new_df[,(names(new_df) %in% c("grade","nplay_video"))]
-work_df$grade = 100*work_df$grade
-work_df = new_df[,(names(new_df) %in% c("grade","nevents","ndays_act","nplay_video","nchapters", "nforum_posts" ))]
-# names(work_df) ,"institute"
-mooc_datasort_mlr<-sample(1:nrow(work_df),nrow(work_df)*.8)
-train_mlr<-work_df[mooc_datasort_mlr,]
-test_mlr<-work_df[-mooc_datasort_mlr,]
-mdl_mlr<-lm(grade~.,data=train_mlr)
-pred_train_mlr<-predict(mdl_mlr,train_mlr)
-pred_test_mlr<-predict(mdl_mlr,test_mlr)
-#Get RMSE values
-rmse_mlr_train<-rmse(pred_train_mlr,train_mlr$grade)
-rmse_mlr_train
-rmse_mlr_test<-rmse(pred_test_mlr,test_mlr$grade)
-rmse_mlr_test
-#R2 value for training data
-sst<-sum((train_mlr$grade-mean(train_mlr$grade))^2,na.rm=TRUE)
-sst
-sse<-sum((pred_train_mlr-train_mlr$grade)^2,na.rm=TRUE)
-sse
-rsq<-1-sse/sst
-rsq
-hd = names(work_df)
-plot(train_mlr$grade,pred_train_mlr,xlab="Actual",ylab="Predicted",main = hd)
-abline(a=0,b=1,col = 'red')
-summary(mdl_mlr)
+# need to start selecting features and modelling for the 5 questions
