@@ -54,7 +54,9 @@ Agg = Agg[,!(names(Agg) %in% c('nchapters'))]
 clean_df = merge(clean_df,Agg, by = 'course_id')
 clean_df =  clean_df[(clean_df$explored == 1 & clean_df$nchapters > clean_df$chapter_limit) | (clean_df$explored == 0 & clean_df$nchapters < clean_df$chapter_limit), ]
 clean_df = clean_df[,!(names(clean_df) %in% c('chapter_limit'))]
-#date 
+#date
+clean_df$last_event_DI <- as.Date(clean_df$last_event_DI, format = "%m/%d/%Y")
+clean_df$start_time_DI <- as.Date(clean_df$start_time_DI, format = "%m/%d/%Y")
 clean_df = clean_df[(clean_df$last_event_DI >= clean_df$start_time_DI),]
 #Grade, certified 
 Agg1 = aggregate(grade ~ course_id + certified, data = clean_df, FUN = max )
@@ -66,10 +68,7 @@ clean_df = clean_df[(clean_df$certified == 0 & clean_df$grade <= clean_df$grade.
 clean_df = clean_df[,!(names(clean_df) %in% c('grade.x'))]
 #age >= 9  - can be implemented
 # adding days_diff
-clean_df$last_event_DI <- as.Date(clean_df$last_event_DI, format = "%m/%d/%Y")
-clean_df$start_time_DI <- as.Date(clean_df$start_time_DI, format = "%m/%d/%Y")
 clean_df$n_days = as.numeric(difftime(clean_df$last_event_DI, clean_df$start_time_DI, units = "days"))
-
 
 
 # Non Numeric columns are being factorised for correlation calculation
