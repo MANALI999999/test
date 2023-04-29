@@ -66,6 +66,8 @@ clean_df = clean_df[(clean_df$certified == 0 & clean_df$grade <= clean_df$grade.
 clean_df = clean_df[,!(names(clean_df) %in% c('grade.x'))]
 #age >= 9  - can be implemented
 # adding days_diff
+clean_df$last_event_DI <- as.Date(clean_df$last_event_DI, format = "%m/%d/%Y")
+clean_df$start_time_DI <- as.Date(clean_df$start_time_DI, format = "%m/%d/%Y")
 clean_df$n_days = as.numeric(difftime(clean_df$last_event_DI, clean_df$start_time_DI, units = "days"))
 
 
