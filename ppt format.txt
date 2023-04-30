@@ -1,1 +1,17 @@
-
+Project Description - What MOOC DEfinition, purpose, SMART Questions 
+Data Introduction - Data Summary- Data types(Categorical), Data Definitions, Assumptions used in the project
+Methodologies - Flow of events
+Outlier identification and Treatment 
+Factoring the categorical variables
+Finding Correlation between Outlier data and Outlier removed data
+Feature Selection for S
+Best model for interpretation and robustness of S
+Feature Selection for M
+Best model for interpretation and robustness of M
+Feature Selection for A
+Best model for interpretation and robustness of A
+Feature Selection for R
+Best model for interpretation and robustness of R
+Feature Selection for T
+Best model for interpretation and robustness of T
+Conclusion - How the smart answer applied in the ........
