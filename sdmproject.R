@@ -396,3 +396,35 @@ sse<-sum((pred_train_rf-train_rf$grade)^2)
 rsq<-1-sse/sst
 rsq
 plot(model_rf)
+
+
+
+####Logistic Regression
+lim_fea_data=work_df[,c('certified','explored','ndays_act','nchapters','nevents','n_days','viewed')]
+set.seed(508)
+sort<-sample(1:nrow(lim_fea_data),nrow(lim_fea_data)*0.8)
+train_logit<-lim_fea_data[sort,]
+test_logit<-lim_fea_data[-sort,]
+#Develop Logistic Regression Model on the Training Data
+glm.fit <- glm(train_logit$certified ~ ., data = train_logit, family = binomial)
+glm.probs_train <- predict(glm.fit,train_logit,type = "response")
+glm.pred_train <- ifelse(glm.probs_train > 0.5, "1", "0")
+#matrix
+train_matrix=matrix(0,2,3)
+rownames(train_matrix)=c('Train', 'Test')
+colnames(train_matrix)=c('Accuracy','Sensitivity','Specificity')
+#Assess prediction result as table as yes / no accuracy
+misclass_train <- as.data.frame.matrix(table(glm.pred_train, truth = train_logit$certified))
+train_matrix[1,1]=(misclass_train[1,1]+ misclass_train[2,2])/sum(misclass_train)
+train_matrix[1,3]=misclass_train[2,2]/(misclass_train[2,2]+misclass_train[1,2])
+train_matrix[1,2]=misclass_train[1,1]/(misclass_train[1,1]+misclass_train[2,1])
+#Apply model and repeat on training data
+glm.probs_test <- predict(glm.fit,test_logit,type = "response")
+glm.pred_test <- ifelse(glm.probs_test > 0.5, "1", "0")
+misclass_test <- as.data.frame.matrix(table(glm.pred_test, truth = test_logit$certified))
+train_matrix[2,1]=(misclass_test[1,1]+ misclass_test[2,2])/sum(misclass_test)
+train_matrix[2,3]=misclass_test[2,2]/(misclass_test[2,2]+misclass_test[1,2])
+train_matrix[2,2]=misclass_test[1,1]/(misclass_test[1,1]+misclass_test[2,1])
+#coeff
+round(coefficients(glm.fit),6)
+
