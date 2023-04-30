@@ -33,16 +33,16 @@ library(gbm)
 
 total_data <- read_csv("sdmproject.csv.csv")
 total_df = as.data.frame(total_data)
-total_df = total_df[,!(names(total_df) %in% c("...1"))]
+total_df = total_df[,!(names(total_df) %in% c("...1","gender"))]
 # total_df.drop("...1")
 new_df = total_df
 #outliers removal 
 clean_df = total_df
-clean_df = drop_na(clean_df)
+#clean_df = drop_na(clean_df) # gender is not being used , 
 #incomplete_flag
 clean_df = clean_df[clean_df$incomplete_flag==0 ,]
 #gender - o is being removed as we have only 4 observations
-clean_df = subset(clean_df, clean_df$gender %in% c("m", "f"))
+#clean_df = subset(clean_df, clean_df$gender %in% c("m", "f"))
 # viewed = 0 , explored = 1 
 clean_df = clean_df[!(clean_df$viewed == 0 & clean_df$explored == 1),]
 #Explored , n_chapters
@@ -52,11 +52,9 @@ Agg$chapter_limit = round(Agg$nchapters/2,0)
 Agg[Agg$course_id==1,2]/2
 Agg = Agg[,!(names(Agg) %in% c('nchapters'))]
 clean_df = merge(clean_df,Agg, by = 'course_id')
-clean_df =  clean_df[(clean_df$explored == 1 & clean_df$nchapters > clean_df$chapter_limit) | (clean_df$explored == 0 & clean_df$nchapters < clean_df$chapter_limit), ]
+clean_df =  clean_df[(clean_df$explored == 1 & clean_df$nchapters >= clean_df$chapter_limit) | (clean_df$explored == 0 & clean_df$nchapters < clean_df$chapter_limit), ]
 clean_df = clean_df[,!(names(clean_df) %in% c('chapter_limit'))]
-#date
-clean_df$last_event_DI <- as.Date(clean_df$last_event_DI, format = "%m/%d/%Y")
-clean_df$start_time_DI <- as.Date(clean_df$start_time_DI, format = "%m/%d/%Y")
+#date 
 clean_df = clean_df[(clean_df$last_event_DI >= clean_df$start_time_DI),]
 #Grade, certified 
 Agg1 = aggregate(grade ~ course_id + certified, data = clean_df, FUN = max )
@@ -64,11 +62,24 @@ Agg2 = aggregate(grade ~ course_id + certified, data = clean_df, FUN = min )
 Agg_m = merge(Agg1,Agg2, by = c('course_id','certified') )
 Agg_f = Agg_m[Agg_m$certified == 0 ,c('course_id','grade.x')]
 clean_df = merge(clean_df,Agg_f, by = 'course_id')
-clean_df = clean_df[(clean_df$certified == 0 & clean_df$grade <= clean_df$grade.x) | (clean_df$certified == 1 & clean_df$grade >= clean_df$grade.x),]
+clean_df = clean_df[(clean_df$certified == 0 & clean_df$grade <= clean_df$grade.x) | (clean_df$certified == 1 & clean_df$grade > clean_df$grade.x),]
 clean_df = clean_df[,!(names(clean_df) %in% c('grade.x'))]
+Agg1 = aggregate(grade ~ course_id + certified, data = clean_df, FUN = max )
+Agg2 = aggregate(grade ~ course_id + certified, data = clean_df, FUN = min )
+Agg_m = merge(Agg1,Agg2, by = c('course_id','certified') )
+
 #age >= 9  - can be implemented
 # adding days_diff
-clean_df$n_days = as.numeric(difftime(clean_df$last_event_DI, clean_df$start_time_DI, units = "days"))
+clean_df$n_days = as.numeric(difftime(clean_df$last_event_DI, clean_df$start_time_DI, units = "days")+1)
+
+test_df = clean_df[clean_df$ndays_act > clean_df$n_days,c('start_time_DI','last_event_DI','ndays_act','n_days')]
+
+# ndays_act <= n_day
+clean_df = clean_df[clean_df$ndays_act <= clean_df$n_days,]
+
+
+# anymore outlier conditions should be implemented
+
 
 
 # Non Numeric columns are being factorised for correlation calculation
