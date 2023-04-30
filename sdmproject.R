@@ -193,3 +193,195 @@ corrplot(cor_work_data_Pearson, method = "circle", addCoef.col = "black",
 
 # Assumption : more the participation , more the learning , more the grade
 # need to start selecting features and modelling for the 5 questions
+
+#Codes for regression
+#Multiple Linear Regression
+set.seed(80)
+# work_df = new_df[,(names(new_df) %in% c("grade","nplay_video"))]
+work_df$grade = 100*work_df$grade
+work_df = new_df[,(names(new_df) %in% c("grade","nevents","ndays_act","nplay_video","nchapters", "nforum_posts" ))]
+# names(work_df) ,"institute"
+mooc_datasort_mlr<-sample(1:nrow(work_df),nrow(work_df)*.8)
+train_mlr<-work_df[mooc_datasort_mlr,]
+test_mlr<-work_df[-mooc_datasort_mlr,]
+mdl_mlr<-lm(grade~.,data=train_mlr)
+pred_train_mlr<-predict(mdl_mlr,train_mlr)
+pred_test_mlr<-predict(mdl_mlr,test_mlr)
+#Get RMSE values
+rmse_mlr_train<-rmse(pred_train_mlr,train_mlr$grade)
+rmse_mlr_train
+rmse_mlr_test<-rmse(pred_test_mlr,test_mlr$grade)
+rmse_mlr_test
+#R2 value for training data
+sst<-sum((train_mlr$grade-mean(train_mlr$grade))^2,na.rm=TRUE)
+sst
+sse<-sum((pred_train_mlr-train_mlr$grade)^2,na.rm=TRUE)
+sse
+rsq<-1-sse/sst
+rsq
+hd = names(work_df)
+plot(train_mlr$grade,pred_train_mlr,xlab="Actual",ylab="Predicted",main = hd)
+abline(a=0,b=1,col = 'red')
+summary(mdl_mlr)
+
+
+# Principal Component Regression (PCR)
+prop_PCR<-work_df$grade
+feature_PCR<-work_df[,!names(work_df)%in%c("grade")]
+feature_PCR_std<-as.data.frame(scale(feature_PCR))
+pca<-prcomp(feature_PCR_std)
+pca
+plot(pca$sdev)
+#Select number of PCs
+#In this case, we'll select 4
+scores<-pca$x[,1:4]
+loads<-pca$rotation[,1:4]
+pcr_data<-cbind(prop_PCR,scores)
+#Have now defined new data with property and PCs
+#Now repeat the MLR process
+set.seed(508)
+mooc_datasort_pcr<-sample(1:nrow(pcr_data),nrow(pcr_data)*.8)
+train_pcr<-pcr_data[mooc_datasort_pcr,]
+test_pcr<-pcr_data[-mooc_datasort_pcr,]
+train_pcr_d<-as.data.frame(train_pcr)
+test_pcr_d<-as.data.frame(test_pcr)
+mdl_pcr<-lm(prop_PCR~.,data=train_pcr_d)
+pred_train_pcr<-predict(mdl_pcr,train_pcr_d)
+pred_test_pcr<-predict(mdl_pcr,test_pcr_d)
+#Get RMSE values
+rmse_pcr_train<-rmse(pred_train_pcr,train_pcr_d$prop_PCR)
+rmse_pcr_train
+rmse_pcr_test<-rmse(pred_test_pcr,test_pcr_d$prop_PCR)
+rmse_pcr_test
+#R2 value for training data
+sst<-sum((train_pcr_d$prop_PCR-mean(train_pcr_d$prop_PCR))^2)
+sse<-sum((pred_train_pcr-train_pcr_d$prop_PCR)^2)
+rsq<-1-sse/sst
+rsq
+plot(train_pcr_d$prop_PCR,pred_train_pcr,xlab="Actual",ylab="Predicted")
+
+#Ridge Regression
+# data(mtcars)
+set.seed(508)
+datasort<-sample(1:nrow(work_df),nrow(work_df)*0.8)
+train_ridge<-work_df[datasort,]
+test_ridge<-work_df[-datasort,]
+descriptors_train_ridge<-train_ridge[,! names(train_ridge) %in% c("grade")]
+descriptors_test_ridge<-test_ridge[,! names(test_ridge) %in% c("grade")]
+descriptors_train_ridge<-as.matrix(descriptors_train_ridge)
+descriptors_test_ridge<-as.matrix(descriptors_test_ridge)
+mdl_ridge<-glmnet(descriptors_train_ridge,train_ridge$grade,alpha=0)
+mdl_ridge_cv<-cv.glmnet(descriptors_train_ridge,train_ridge$grade,alpha=0)
+best_lambda<-mdl_ridge_cv$lambda.min
+mdl_ridge_best<-glmnet(descriptors_train_ridge,train_ridge$grade,alpha=0,lambda=best_lambda)
+coef(mdl_ridge_best)
+pred_train_ridge<-predict(mdl_ridge,s=best_lambda,newx=descriptors_train_ridge)
+pred_test_ridge<-predict(mdl_ridge,s=best_lambda,newx=descriptors_test_ridge)
+pred_train_ridge<-as.data.frame(pred_train_ridge)
+pred_test_ridge<-as.data.frame(pred_test_ridge)
+rmse_ridge_train<-rmse(pred_train_ridge,train_ridge$grade)
+rmse_ridge_test<-rmse(pred_test_ridge,test_ridge$grade)
+rmse_ridge_train
+rmse_ridge_test
+sst<-sum((train_ridge$grade-mean(train_ridge$grade))^2)
+sse<-sum((pred_train_ridge-train_ridge$grade)^2)
+rsq<-1-sse/sst
+rsq
+
+
+#Lasso Regression
+# data(mtcars)
+set.seed(508)
+datasort<-sample(1:nrow(work_df),nrow(work_df)*0.8)
+train_ridge<-work_df[datasort,]
+test_ridge<-work_df[-datasort,]
+descriptors_train_ridge<-train_ridge[,! names(train_ridge) %in% c("grade")]
+descriptors_test_ridge<-test_ridge[,! names(test_ridge) %in% c("grade")]
+descriptors_train_ridge<-as.matrix(descriptors_train_ridge)
+descriptors_test_ridge<-as.matrix(descriptors_test_ridge)
+mdl_ridge<-glmnet(descriptors_train_ridge,train_ridge$grade,alpha=1)
+mdl_ridge_cv<-cv.glmnet(descriptors_train_ridge,train_ridge$grade,alpha=1)
+best_lambda<-mdl_ridge_cv$lambda.min
+mdl_ridge_best<-glmnet(descriptors_train_ridge,train_ridge$grade,alpha=1,lambda=best_lambda)
+coef(mdl_ridge_best)
+pred_train_ridge<-predict(mdl_ridge,s=best_lambda,newx=descriptors_train_ridge)
+pred_test_ridge<-predict(mdl_ridge,s=best_lambda,newx=descriptors_test_ridge)
+pred_train_ridge<-as.data.frame(pred_train_ridge)
+pred_test_ridge<-as.data.frame(pred_test_ridge)
+rmse_ridge_train<-rmse(pred_train_ridge,train_ridge$grade)
+rmse_ridge_test<-rmse(pred_test_ridge,test_ridge$grade)
+rmse_ridge_train
+rmse_ridge_test
+sst<-sum((train_ridge$grade-mean(train_ridge$grade))^2)
+sse<-sum((pred_train_ridge-train_ridge$grade)^2)
+rsq<-1-sse/sst
+rsq
+
+# need more processing for this 
+
+
+#Support vector regression
+set.seed(508)
+svr_datasort<-sample(1:nrow(work_df),nrow(work_df)*0.8)
+train_svr<-work_df[svr_datasort,]
+test_svr<-work_df[-svr_datasort,]
+train_svr_d<-data.frame(train_svr)
+descriptors_train_svr<-train_svr[,! names(train_svr) %in% c("grade")]
+descriptors_test_svr<-test_svr[,! names(test_svr) %in% c("grade")]
+descriptors_train_svr<-as.matrix(descriptors_train_svr)
+descriptors_test_svr<-as.data.frame(descriptors_test_svr)
+prop_train_svr<-train_svr$grade
+prop_test_svr<-test_svr$grade
+mdl_svr<-tune(svm,prop_train_svr~descriptors_train_svr,ranges=list(epsilon=seq(0,1,0.1),cost=1:10))
+BstModel<-mdl_svr$best.model
+summary(BstModel)
+#Update the regression model with the selections from BstModel (kernel, cost, gamma, epsilon)
+svmfit <- svm(train_svr$grade ~., data = train_svr, method="eps-regression",kernel = 'radial', cost = 3, gamma=0.1,epsilon=.3,scale=FALSE)
+pred_train_svr<-predict(svmfit, data=descriptors_train_svr)
+pred_test_svr<-predict(svmfit,newdata=descriptors_test_svr)
+rmse_SVR_train<-rmse(pred_train_svr,prop_train_svr)
+rmse_SVR_test<-rmse(pred_test_svr,prop_test_svr)
+rmse_SVR_train
+rmse_SVR_test
+sst<-sum((train_svr$mpg-mean(train_svr$mpg))^2)
+sse<-sum((pred_train_svr-train_svr$mpg)^2)
+rsq<-1-sse/sst
+rsq
+
+#Gaussian Process Regression
+set.seed(508)
+datasort<-sample(1:nrow(work_df),nrow(work_df)*0.8)
+train_gpr<-work_df[datasort,]
+test_gpr<-work_df[-datasort,]
+descriptors_train_gpr<-train_gpr[,! names(train_gpr) %in% c("grade")]
+descriptors_test_gpr<-test_gpr[,! names(test_gpr) %in% c("grade")]
+mdl_gpr<-gausspr(descriptors_train_gpr,train_gpr$grade)
+pred_train_gpr<-predict(mdl_gpr,descriptors_train_gpr)
+pred_test_gpr<-predict(mdl_gpr,descriptors_test_gpr)
+rmse_gpr_train<-rmse(pred_train_gpr,as.matrix(train_gpr$grade))
+rmse_gpr_test<-rmse(pred_test_gpr,as.matrix(test_gpr$grade))
+rmse_gpr_train
+rmse_gpr_test
+sst<-sum((train_gpr$grade-mean(train_gpr$grade))^2)
+sse<-sum((pred_train_gpr-train_gpr$grade)^2)
+rsq<-1-sse/sst
+rsq
+
+
+#Random Forest Regression
+set.seed(508)
+datasort<-sample(1:nrow(work_df),nrow(work_df)*0.8)
+train_rf<-work_df[datasort,]
+test_rf<-work_df[-datasort,]
+model_rf<-randomForest(train_rf$grade~.,data=train_rf,mtry=3,importance=TRUE,na.action=na.omit)
+pred_train_rf<-predict(model_rf,train_rf)
+pred_test_rf<-predict(model_rf,newdata=test_rf)
+rmse_rf_train<-rmse(pred_train_rf,train_rf$grade)
+rmse_rf_test<-rmse(pred_test_rf,test_rf$grade)
+rmse_rf_train
+rmse_rf_test
+sst<-sum((train_rf$grade-mean(train_rf$grade))^2)
+sse<-sum((pred_train_rf-train_rf$grade)^2)
+rsq<-1-sse/sst
+rsq
+plot(model_rf)
